@@ -1,0 +1,149 @@
+Sail Away
+Cover <http://siranah.de/index.htm>  <<  Sail Away
+<http://siranah.de/html/sail000a.htm>  <<  Celestial Navigation
+<http://siranah.de/html/sail040a.htm>  <<  The Nautical Almanac
+<http://siranah.de/html/sail040g.htm>  <<  .
+
+
+    Notes on the C programs used to calculate the Ephemerides
+
+For the calculation of the nautical almanac tables, I basically use the
+"DE405" ephemerides data published by the Jet Propulsion Laboratory
+<http://ssd.jpl.nasa.gov/> and the C version of the "NOVAS" software
+package available from the U.S. Naval Observatory
+<http://aa.usno.navy.mil/software/novas/novas_info.php>.
+
+
+------------------------------------------------------------------------
+
+
+      NOVAS
+
+The *N*aval *O*bservatory *V*ector *A*strometry *S*ubroutines, *NOVAS*,
+is an integrated package of source-code modules for computing a wide
+variety of common astrometric quantities and transformations. Up to now
+(June 2012), I have been using version 2.0 of this package. The current
+version is 3.1, but due to the recent introduction of new reference
+systems, it is not fully "compatible" with the previous version.
+The packages can provide, the precise celestial position (apparent,
+topo-centric or astrometric) of selected celestial objects (Sun, Moon,
+planets, stars, ... ) at specified dates and times. At a lower level,
+NOVAS also provides general astrometric utility transformations, such as
+those for precession, nutation, aberration, parallax, and the
+gravitational deflection of light.
+
+The computations are highly precise. The United States Nautical Almanac
+Office uses NOVAS in the production of its sections of /The Astronomical
+Almanac/.
+NOVAS-C uses, as input, astrometric reference data that is expressed in
+the International Astronomical Union (IAU) J2000.0 system. In
+particular, NOVAS-C supports data that conforms to the International
+Celestial Reference System (ICRS), adopted by the IAU in 1996.
+ICRS-compatible data includes the Hipparcos and Tycho Catalogues, the
+ACT Reference Catalogue, the International Celestial Reference Frame
+(ICRF), *the Jet Propulsion Laboratory's DE405 planetary ephemeris*, and
+Earth orientation measurements from the International Earth Rotation
+Service (IERS). The list of ICRS-compatible data of various types is
+continually expanding. NOVAS-C can also be used with data conforming to
+the FK5 system.
+
+Effective use of NOVAS-C requires some background in positional
+astronomy and some degree of programming experience. It is highly
+recommended to read the accompanying documentation before attempting to
+use the software package.
+
+
+------------------------------------------------------------------------
+
+
+      Basic Ephemerides "DE405"
+
+The basic ephemerides I used, are taken from the "DE405" ephemerides
+files published by the Jet Propulsion Laboratory
+<http://ssd.jpl.nasa.gov/>.
+
+The "NOVAS" package (see above) comes with a Fortran subroutine
+"jplint.f", which should be able to read the DE405 ephemerides and
+interface with the C routines of the "NOVAS" software package. However,
+I found it difficult to link Fortran code and C code together into a
+working project. Therefore, I wrote my own C version of the "jplint.f"
+code as a direct interface to the binary "DE405" ephemerides files.
+
+The basic "DE405" Ephemerides in ASCII format from 1600AD until 2200AD
+<ftp://ssd.jpl.nasa.gov/pub/eph/planets/ascii/de405/> can be downloaded
+in different files from the JPL server. These "DE405" ephemerides are
+available in ASCII format, but have to be converted and merged together
+in one binary file to make it usable for the "jplint" routines. For
+generating this binary ephemerides file I used the software package of
+David Hoffman
+<ftp://ssd.jpl.nasa.gov/pub/eph/planets/C-versions/hoffman/> which is
+also written in C.
+
+The following lines describe how I generated my binary ephemerides file
+for the time span 2000 to 2040 using the "convert" and "append" programs
+of David Hoffman:
+
+  * I downloaded the files "ascp2000.405", "ascp2020.405" and
+    "header.405" from the JPL server
+    <ftp://ssd.jpl.nasa.gov/pub/eph/planets/ascii/de405/>.
+  * Then I converted both ASCII files into a corresponding binary file
+    with the programs of David Hoffman
+    <ftp://ssd.jpl.nasa.gov/pub/eph/planets/C-versions/hoffman/>:
+
+    % convert header.405 ascp2000.405 ascp2000.bin
+    % convert header.405 ascp2020.405 ascp2020.bin
+
+  * Finally, I merged the binary files and renamed the resulting binary
+    ephemerides file:
+
+    % append ascp2000.bin ascp2020.bin
+    % mv ascp2000.bin JPLephemDE405.bin
+    % rm ascp2020.bin
+
+The resulting binary file "JPLephemDE405.bin" can be read with my
+version of "jplint.c" and contains the Tchebychev coefficients for the
+time span 2000 to 2040.
+
+
+------------------------------------------------------------------------
+
+
+      Source Codes, Compiler and Platform Configuration
+
+The complete software package I am using - excluding the "DE405"
+ephemerides - is available as packed repository. The package
+(CN_code.tgz <http://siranah.de/manuals/CN_code.tgz>) consists of:
+
+  * the NOVAS subroutines (package version 2.0)
+  * the program codes of David Hoffman for generating and manipulating
+    the binary ephemerides file(s)
+  * my own source codes for generating the Nautical Almanac and related
+    manuals
+
+and comes as a "gzipped-tar-archive" (approx. 850 Kbyte).
+
+It also contains the C sources for generating the PostScript files of
+the Sight Reduction Tables, Sextant Correction Tables and Interpolation
+Tables.
+
+
+Under Linux/Unix, unzip and unpack the package file with the following
+procedure:
+
+% gzip -d CN_code.tgz
+% tar -xvf CN_code.tar 
+
+Or if you have a "gnu" version of "tar" installed it can do both jobs with:
+
+% tar -xvzf CN_code.tgz
+
+
+
+
+
+------------------------------------------------------------------------
+Cover <http://siranah.de/index.htm>  <<  Sail Away
+<http://siranah.de/html/sail000a.htm>  <<  Celestial Navigation
+<http://siranah.de/html/sail040a.htm>  <<  The Nautical Almanac
+<http://siranah.de/html/sail040g.htm>  <<  . 	last updated: 20-Jul-2012
+
