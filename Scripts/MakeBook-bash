@@ -1,0 +1,109 @@
+#! /bin/bash
+
+if ( test ${#1} == 0 ) then
+  echo "Usage: MakeBook-bash <valid_PS_file_name> [-ds]"
+  echo "       The option [-ds] will produce a double-sided output file"
+  exit
+fi
+
+psfile=`basename $1 .ps`
+
+if ( test -e ${psfile}.ps ) then
+  echo "${psfile}.ps" | awk '{ printf "Processing \"%s\" ...\n",$1}'
+
+#  ----------------------- check for postscript format ...
+
+  psflag=`head -1 ${psfile}.ps | awk '{ if(substr($1,3,9)=="PS-Adobe-") print "1"; else print "0";}'`
+  if ( test ${psflag} == 0 ) then
+    echo "${psfile} }.ps" | awk '{ printf "Error: input file \"%s\" is not a valid PostScript file!\n",$1}'
+    exit
+  fi
+
+  # --------------------------------------------------------------------------------------------------------
+  # The next script selects the pages 1,4,5,8,9,12, ... and prints them pairwise on a single page at half
+  # of the original size. The "Page:" header of the original PS file are replaced by the "scale/translate"
+  # commands. New "Page" header are inserted after each pair of original pages.
+  #
+  awk 'BEGIN {output=1; n=1; page=0; line=0; } \
+             { lineout=$0; \
+               if($1=="%%Page:") \
+               { output=0; \
+                 if($2==n) \
+                 { output=1; \
+                   i=(n%2); \
+                   if(i==1) \
+		   { line=0; page++; \
+                     printf "#%04d#0#%05d#%%%%Page: %d %d\n",page,line,page,page; \
+                     lineout="0.707 0.707 scale 90 rotate 610 -840 translate gsave"; \
+                     n=n+3; \
+                   } \
+                   if(i==0) \
+                   { lineout="grestore -630 0 translate gsave"; \
+                     n=n+1; \
+                   } \
+                 } \
+               } \
+               if(($1=="showpage")&&(i==1)) lineout=""; \
+               if($0=="%%EOF") output=0; \
+               if(output==1) printf "#%04d#0#%05d#%s\n",page,line++,lineout; \
+             } \
+       END   { if(i==1) print "grestore showpage"; print "%%EOF" }' ${psfile}.ps >| ${psfile}.0.tmp
+       echo "  generated pre-postscript file -- ${psfile}.0.tmp -- "
+         
+         
+  # The next script selects the pages 2,3,6,7,10,11, .. and prints them pairwise on a single page at half
+  # of the original size. The "Page:" header of the original PS file are replaced by the "scale/translate"
+  # commands. New "Page" header are inserted after each pair of original pages.
+  #
+  awk 'BEGIN {output=1; n=2; page=0; line=0; } \
+             { lineout=$0; \
+               if($1=="%%Page:") \
+               { output=0; \
+                 if($2==n) \
+                 { output=1; \
+                   i=(n%2); \
+                   if(i==0) \
+                   { line=0; page++; \
+                     printf "#%04d#1#%05d#%%%%Page: %d %d\n",page,line,page,page; page++; \
+                     lineout="0.707 0.707 scale 90 rotate -20 -840 translate gsave"; \
+                     n=n+1; \
+                   } \
+                   if(i==1) \
+                   { lineout="grestore 630 0 translate gsave"; \
+                     n=n+3; \
+                   } \
+                 } \
+               } \
+               if(($1=="showpage")&&(i==0)) lineout=""; \
+               if($0=="%%EOF") output=0; \
+               if(output==1) printf "#%04d#1#%05d#%s\n",page,line++,lineout; \
+             } \
+       END   { if(i==0) print "grestore showpage"; print "%%EOF" }' ${psfile}.ps >| ${psfile}.1.tmp
+       echo "  generated pre-postscript file -- ${psfile}.1.tmp -- "
+
+  else
+  echo "${psfile}.ps" | awk '{ printf "Error: could not find file \"%s\"\n",$1}'
+  exit
+fi
+
+# -----------   process the double-sided option and remove the sorting index from the PS files -----
+if ( test ${#2} == 0 ) then
+  echo "  generating final single-sided postscript files ... "
+  cat ${psfile}.0.tmp | sed 's/^#....#.#.....#//' > ${psfile}_0.ps
+  cat ${psfile}.1.tmp | sed 's/^#....#.#.....#//' > ${psfile}_1.ps
+  else
+  if ( test $2 == "-ds" ) then
+    echo "merging the two postscript files to a single double-sided postscript file ... "
+    cat ${psfile}.[01].tmp | sed '/#0000#1#/d' | sort | sed 's/^#....#.#.....#//' > ${psfile}.2.tmp
+    echo "  generating merged PostScript file ..."
+    awk 'BEGIN { p=0} \
+         { if($1 == "%%Page:") { p++; printf "%%%%Page: %d %d\n",p,p; } \
+             else print $0; \
+         }' ${psfile}.2.tmp > ${psfile}_book-ds.ps
+    echo "  generating PDF file ...     (this may take a while ...)" 
+    ./ps2pdf ${psfile}_book-ds.ps
+  fi
+fi
+
+# ------- remove temporary generated files ...
+rm -f ${psfile}.[012].tmp 

@@ -1,0 +1,45 @@
+#! /bin/csh
+
+set fn=`basename $1 .ps`
+
+if( -e ${fn}.ps ) then
+  set fl=`head -1 ${fn}.ps`
+  set rl="%\!PS-Adobe-3.0"
+
+  if( ${fl} == ${rl} ) then
+    set parts="0 1 2 3 4"
+    foreach part ($parts)
+      echo -n " making ${fn}_${part}.ps ..."
+#
+#                                                  the following line contains the starting page of the 5 different parts! 
+#
+      echo "1 23 113 204 296 500 $part" >! ${fn}.tmp
+      cat ${fn}.ps >> ${fn}.tmp
+      awk 'NR==1 { for(i=0; i<6; i++) page[i]=$(i+1); \
+                   cpart=$7; cpage=0; part=-1; \
+                   next; \
+                 } \
+                 { if(substr($0,1,7)=="%%Page:") \
+                   { cpage=$2; \
+                     part=-1; \
+                     for(i=0; i<5; i++) if((cpage>=page[i])&&(cpage<page[i+1])) part=i; \
+                   } \
+                   if(cpage==0) print $0; \
+                   if(part==cpart) print $0; \
+                 } \
+           END   { if(cpart<4) printf "%%%%EOF\n"; \
+                 }' ${fn}.tmp >! ${fn}_${part}.ps
+      rm ${fn}.tmp
+#
+# make shure "ps2pdf" is in your $PATH variable ...
+#
+      echo " and convert to ${fn}_${part}.pdf ..."
+      ./ps2pdf ${fn}_${part}.ps
+      rm ${fn}_${part}.ps
+    end
+
+    else
+    echo "${fn}.ps" | awk '{ printf "\n Error: file not PostScript format: \"%s\"!\n\n",$1; }'
+  endif
+  else echo "${fn}.ps" | awk '{ printf "\n Error: file not found: \"%s\"!\n\n",$1; }'
+endif

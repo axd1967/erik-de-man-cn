@@ -1,0 +1,11 @@
+#! /bin/csh
+set lats="00 10 20 30 40 50 60 70"
+foreach lat ($lats)
+  ./SightReduction $lat
+  cd Data
+  echo " formatting Data/SiRed${lat}c.ps ..."
+  ps2pdf SiRed${lat}c.ps
+  echo " formatting Data/SiRed${lat}s.ps ..."
+  ps2pdf SiRed${lat}s.ps
+  cd ..
+end

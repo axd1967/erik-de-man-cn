@@ -1,0 +1,111 @@
+#! /bin/csh
+
+# -----------------------  check for valid argument ....
+
+if ( $1 == "" ) then
+  echo "Usage MakeBookDoubleSided <valid_PS_file_name>"
+  exit(-1)
+endif
+
+set psfile=`echo $1`
+
+
+if ( -e $psfile ) then
+  echo $psfile | awk '{ printf "Processing \"%s\" ...\n",$1}'
+
+#  ----------------------- check for postscript format ...
+
+  set psflag=`head -1 $psfile | awk '{ if(substr($1,3,9)=="PS-Adobe-") print "1"; else print "0";}'`
+  if ( $psflag == 0 ) then
+    echo $psfile | awk '{ printf "Error: input file \"%s\" is not a PostScript file!\n",$1}'
+    exit(-1)
+  endif
+
+
+# The next script selects the pages 1,4,5,8,9,12, ... and prints them pairwise on a single page at half
+# of the original size. The "Page:" header of the original PS file are replaced by the "scale/translate"
+# commands. New "Page"" header are inserted after each pair of original pages.
+# The required pages sequence is generated with the counters "n" and "i".
+#
+  awk 'BEGIN {output=1; n=1; i=3; page=1} \
+       { lineout=$0; \
+         if($1=="%%Page:") \
+         { output=0; \
+           if(n==$2) \
+           { output=1; \
+             n+=i; \
+             i=(i+2)%4; \
+             if(i==1) { printf "%%%%Page: %d %d\n",page,page; page++; lineout="0.707 0.707 scale 90 rotate 610 -840 translate gsave"} \
+             if(i==3) { lineout="grestore -630 0 translate gsave"} \
+           } \
+         } \
+         if(($1=="showpage")&&(i==1)) lineout=""; \
+         if($0=="%%EOF") output=0; \
+         if(output==1) print lineout; \
+       } \
+       END { if(i==1) print "grestore showpage"; print "%%EOF" }' $psfile >! ${psfile}.0
+         
+# The next script selects the pages 2,3,6,7,10,11, .. and prints them pairwise on a single page at half
+# of the original size. The "Page:" header of the original PS file are replaced by the "scale/translate"
+# commands. New "Page"" header are inserted after each pair of original pages.
+# The required pages sequence is generated with the counters "n" and "i".
+#
+  awk 'BEGIN {output=1; n=2; i=1; page=1} \
+       { lineout=$0; \
+         if($1=="%%Page:") \
+         { output=0; \
+           if(n==$2) \
+           { output=1; \
+             n+=i; \
+             i=(i+2)%4; \
+             if(i==3) { printf "%%%%Page: %d %d\n",page,page; page++; lineout="0.707 0.707 scale 90 rotate -20 -840 translate gsave"} \
+             if(i==1) { lineout="grestore 630 0 translate gsave"} \
+           } \
+         } \
+         if(($1=="showpage")&&(i==3)) lineout=""; \
+         if($0=="%%EOF") output=0; \
+         if(output==1) print lineout; \
+       } \
+       END { if(i==3) print "grestore showpage"; print "%%EOF" }' $psfile >! ${psfile}.1
+
+  else
+  echo $psfile | awk '{ printf "Error: could not find file \"%s\"\n",$1}'
+endif
+
+if ( ( -e ${psfile}.0 ) && ( -e ${psfile}.1 ) ) then
+  set pmax=`grep "%%Page:" ${psfile}.0 | awk '{ n=$2; } END { print n }'`
+  set p=1 
+
+  awk 'BEGIN  { p=0; } \
+       { if($1=="%%Page:") { p=$2; next; } \
+         if($1=="%%EOF") next; \
+         printf "##%d##%s\n",p,$0; \
+       }' ${psfile}.0 >! ${psfile}.0.lines
+
+  awk 'BEGIN  { p=0; } \
+       { if($1=="%%Page:") { p=$2; next; } \
+         if($1=="%%EOF") next; \
+         printf "##%d##%s\n",p,$0; \
+       }' ${psfile}.1 >! ${psfile}.1.lines
+ 
+  grep "##0##" ${psfile}.0.lines | sed 's/##.*##//' >! ${psfile}.book_ds
+  while ( $p <= $pmax ) 
+    echo "adding page $p"
+    echo "$p" | awk '{ printf "%%%%Page: %d %d\n",2*$1-1,2*$1-1; }' >> ${psfile}.book_ds
+    grep "##$p##" ${psfile}.0.lines | sed 's/##.*##//' >> ${psfile}.book_ds
+
+    echo "$p" | awk '{ printf "%%%%Page: %d %d\n",2*$1  ,2*$1  ; }' >> ${psfile}.book_ds
+    grep "##$p##" ${psfile}.1.lines | sed 's/##.*##//' >> ${psfile}.book_ds
+
+    @ p = ($p + 1)
+  end
+  echo "$p" | awk '{ printf "%%%%EOF\n" }' >> ${psfile}.book_ds
+  
+  rm -f ${psfile}.[01] ${psfile}.[01].lines
+  exec gs -q -sPAPERSIZE=a4 -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=${psfile}.book_ds.pdf ${psfile}.book_ds -c quit
+
+  rm -f ${psfile}.book_ds
+
+  else
+  echo $psfile | awk '{ printf "Error: could not find splitted files \"%s.0\" and \"%s.1\" \n",$1,$1}'
+endif

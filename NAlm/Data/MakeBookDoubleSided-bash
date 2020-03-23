@@ -1,0 +1,9 @@
+#! /bin/bash
+
+if ( test ${#1} == 0 ) then
+  echo "Error invalid argument "
+  exit
+fi
+
+
+MakeBook-bash $1 -ds

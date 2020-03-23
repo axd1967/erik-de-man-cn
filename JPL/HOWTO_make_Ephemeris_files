@@ -1,0 +1,53 @@
+
+
+
+
+This HOWTO is a short introduction on how to generate binary ephemerides files from
+the basic (ASCII) "DE405" ephemerides files published by the Jet Propulsion Laboratory.
+
+
+Background:
+
+The "NOVAS" package is the software package which supplies the basic functions to
+calculate the solar system ephemerides. But thes functions need an interface to a
+basic ephemerides file, which is basically a numerical file with position and speed 
+of the solar system objects at distinct time instances. The "NOVAS" basic functions
+can obtain the ephemerides from interpolation of this raw data in time and space.
+The problem with binary data is that they are stored in a way that depends on the
+operating system of your computer (in contrast to ASCII data) and must be generated
+with the same operarting system under which the data will be read.
+
+The tools "convert" and "append" available from the "Source" subdirectory, will allow
+to generate the binary "DE405" ephemerides files needed by the "NOVAS" functions
+from the downloadable ASCII files published by the Jet Propulsion Laboratory.
+
+
+Procedure:
+
+The basic "DE405" Ephemerides in ASCII format from 1600AD until 2200AD can be downloaded
+from the JPL server. These "DE405" ephemerides are available in ASCII format, but have
+to be converted and merged together in one binary file to make it usable for the "jplint"
+routine.
+
+This is how the binary ephemerides file can be generated using the "convert" and "append"
+programms of David Hoffman:
+
+
+
+First download the files "ascp2000.405", "ascp2020.405" and "header.405" from the JPL
+server. The last file is a small header file describing the actual structure of the 
+large ASCII ephemerides files.
+Then convert both ASCII ephemerides files into a corresponding binary file with the
+"convert" programm from the "Source" subdirectory:
+
+% convert header.405 ascp2000.405 ascp2000.bin
+% convert header.405 ascp2020.405 ascp2020.bin
+
+Finally merge the binary files and rename the resulting binary ephemerides file:
+
+% append ascp2000.bin ascp2020.bin
+% rm ascp2020.bin
+% mv ascp2000.bin JPLephemDE405.bin
+
+The binary file "JPLephemDE405.bin" is read by my C-version of "jplint.c" and contains
+the Tchebychev coefficients for the time span 2000 to 2040. 

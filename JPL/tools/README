@@ -1,0 +1,32 @@
+
+This directory contains the source code and binaries of two tools
+needed to generate the binary ephemerides file "../JPLephemDE405.bin"
+in the parent directory. This is the basic ephemeris file for
+generating the Nautical Almanac.
+
+
+
+The two programms needed for this are:
+
+ ./bin/convert   to convert individual ASCII ephemerides and
+ ./bin/append    to merge converted binary ephemerides files
+
+They can be compiled (with gcc) and installed by doing "make" in this
+directory. You will need a current version of "make" and "gcc"
+to succeed in doing this.
+
+
+See also the "READMEfirst" file in the subdirectory "../ephemerides/"
+for more details on how to generate binary ephemerides files with the
+programms "convert" and "append" found under "./bin"
+
+
+
+NOTICE:
+The original utilities come from the package "EphemUtilVer1.0.tar.gz"
+published 1999 by David Hoffman. This package can be downloaded from
+
+ftp://ssd.jpl.nasa.gov/pub/eph/export/C-versions/hoffman/
+
+(as of 19-Apr-2007).
+

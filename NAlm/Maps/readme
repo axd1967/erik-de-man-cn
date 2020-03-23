@@ -1,0 +1,11 @@
+This directory contains maps and charts, which are included in the Nautical Almanac pages 
+(e.g. map of the world for plotting the path of totality for solar eclipses).
+The format is very specific to the program reading the data and consist of one character-per-pixel
+
+The resolution of the stored map is one pixel per 0.3 degrees of Longitude/Latitude.
+The pixels are stored longitude-wise with 1200 pixel per latitude value (360/0.3) 
+starting with 70 degrees North. A total of 470 lines of latitude (141/0.3) are available
+downto to 70 degrees South. 
+
+Each pixel is represented with one character. A "0" represents a "land" pixel;
+a "1" represents a "sea" pixel. Total number of pixels is (1200 * 470) = 564000

@@ -1,0 +1,49 @@
+#! /bin/bash
+
+fn=`basename $1 .ps`
+
+if ( test -e ${fn}.ps ) then
+  fl=`head -1 ${fn}.ps`
+  rl="%!PS-Adobe-3.0"
+
+  if ( test ${fl} == ${rl} ) then
+    parts="0 1 2 3 4"
+
+    for part in $parts ; do 
+      echo -n " making ${fn}_${part}.ps ..."
+#
+#     the following line contains the starting page of the 5 different parts! 
+#
+#  uncomment for non-leap year:
+#     echo "1 25 115 206 298 500 $part" > ${fn}.tmp
+#  uncomment for leap year:
+      echo "1 25 116 207 299 500 $part" > ${fn}.tmp
+      cat ${fn}.ps >> ${fn}.tmp
+      awk 'NR==1 { for(i=0; i<6; i++) page[i]=$(i+1); \
+                   cpart=$7; cpage=0; part=-1; \
+                   next; \
+                 } \
+                 { if(substr($0,1,7)=="%%Page:") \
+                   { cpage=$2; \
+                     part=-1; \
+                     for(i=0; i<5; i++) if((cpage>=page[i])&&(cpage<page[i+1])) part=i; \
+                   } \
+                   if(cpage==0) print $0; \
+                   if(part==cpart) print $0; \
+                 } \
+           END   { if(cpart<4) printf "%%%%EOF\n"; \
+                 }' ${fn}.tmp > ${fn}_${part}.ps
+      rm ${fn}.tmp
+#
+# make shure "ps2pdf" is in your $PATH variable ...
+#
+      echo " and convert to ${fn}_${part}.pdf ..."
+      ./ps2pdf ${fn}_${part}.ps
+      rm ${fn}_${part}.ps
+    done
+
+    else
+    echo "${fn}.ps" | awk '{ printf "\n Error: file not PostScript format: \"%s\"!\n\n",$1; }'
+  fi
+  else echo "${fn}.ps" | awk '{ printf "\n Error: file not found: \"%s\"!\n\n",$1; }'
+fi

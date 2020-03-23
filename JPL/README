@@ -1,0 +1,42 @@
+
+---------------------------------------------------------------------------------------------------
+
+This directory contains the following files and directories:
+
+JPLephemDE405.bin       binary ephemerides file used to compile the Nautical Almanac
+
+HOWTO_make_epe...       introduction on how to generate the ephemeris file
+README                  ...
+ephemerides             directory containing the "raw" ascii ephemeris files
+tools                   directory containing the tools to generate the binary ephemeris file
+
+---------------------------------------------------------------------------------------------------
+
+Here is the short version of how to create the binary ephemerides file "JPLephemDE405.bin"
+
+1.  You will fist need to compile and install the tools in the "tool" subdirectory.
+    A "Makefile" in the "tool" subdirectory will support this job if you have "make"
+    and "gcc" installed on your computer.
+
+2.  Then you may have to download the ASCII ephemerides file(s)from the JPL server. See the 
+    "READMEfirst" file in the "ephemerides" subdirectory for the correct ftp-addresses.
+
+3.  Finally, the binary ephemerides file "JPLephemDE405.bin" may be generated with the
+    following procedure:
+
+    ./tools/bin/convert ephemerides/header.405 ephemerides/ascp2000.405 temp_file1
+    ./tools/bin/convert ephemerides/header.405 ephemerides/ascp2020.405 temp_file2
+    ./tools/bin/append  temp_file1 temp_file2 
+    
+    rm temp_file2
+    mv temp_file1 JPLephemDE405.bin
+
+---------------------------------------------------------------------------------------------------
+
+Please also read the "HOWTO_make_ephemeris_files" in this directory and also consult the
+README files in the subdirectories to obtain more information.
+
+Especially read the ephemeris/READMEfirst file on how to use the tools "convert" and "append"
+to generate a binary ephemeris file.
+
+---------------------------------------------------------------------------------------------------

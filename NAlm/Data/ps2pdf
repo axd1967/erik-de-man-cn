@@ -1,0 +1,22 @@
+#!/bin/sh
+# Convert PostScript to PDF.
+
+infile=$1;
+
+if [ $# -eq 1 ]
+then
+  case "${infile}" in
+    *.ps)  base=`basename ${infile} .ps` ;;
+    *)	   base=`basename ${infile}` ;;
+  esac
+  outfile=${base}.pdf
+else
+  outfile=$2
+fi
+
+if [ $# -lt 1 -o $# -gt 2 ]; then
+  echo "Usage: `basename $0` input.ps [output.pdf]" 1>&2
+  exit 1
+fi
+
+exec gs -q -sPAPERSIZE=a4 -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$outfile $infile -c quit

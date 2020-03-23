@@ -1,0 +1,75 @@
+
+This directory contains the following files:
+
+ascp2000.405        ASCII file for ephmerides from 2000 ro 2009
+ascp2020.405        ASCII file for ephmerides from 2020 ro 2039
+header.405          Header file to process the ASCII ephmeris files
+README              explaining the format of the ASCII ephmeris files
+READMEfirst         ...
+
+The ASCII ephmeris files initially in this directory are just dummy files.
+The working ASCII ephmeris files as well as the "header" and "README" files 
+must be obtained from the following internet site:
+
+"ftp://ssd.jpl.nasa.gov/pub/eph/export/ascii/ascp2000.405"
+"ftp://ssd.jpl.nasa.gov/pub/eph/export/ascii/ascp2020.405"
+"ftp://ssd.jpl.nasa.gov/pub/eph/export/ascii/header.405"
+"ftp://ssd.jpl.nasa.gov/pub/eph/export/ascii/README"
+
+Each of these ASCII ephmeris files contain the ephemerides for a period of 20 years.
+
+To be useful these files must be converted into a binary ephemeris file,
+which will be used for astronomical calculations to compile the Nautical Almanac.
+This will be explained in the README file in the "../tools" directory.
+
+-----------------------------------------------------------------------------------------
+
+This is how I generated the binary ephemeris files for the time span 2000-2039:
+
+The binary ephemeris file were generated using the "convert" and "append" programs of
+David Hoffman as follows:
+
+   0  install the programs of David Hoffman in the ../tools/ directory
+   1  download the files "ascp2000.405", "ascp2020.405" and "header.405"
+      from the JPL server into this directory. 
+   2  Then convert both ASCII files into a corresponding binary file with the 
+      programs of David Hoffman:
+
+      % ../tools/convert header.405 ascp2000.405 ascp2000.bin
+      % ../tools/convert header.405 ascp2020.405 ascp2020.bin
+
+   3  Finally merge the binary files and renamed the resulting binary ephemeris file:
+
+      % ../tools/append ascp2000.bin ascp2020.bin
+      % mv ascp2000.bin ../JPLephemDE405.bin
+      % rm ascp2020.bin
+
+The binary file "JPLephemDE405.bin" contains the Tchebychev coefficients for the time
+span 2000 to 2039 and is read by my version of "jplint.c" compiled into the program
+../../NAlm/NauticalAlmanac (look there to see how to build this program).
+
+-----------------------------------------------------------------------------------------
+
+If the timespan 2000-2019 suffices then follow this procedure:
+
+
+Generate the binary ephemeris file from the downloaded ASCII file:
+
+   0  install the programs of David Hoffman in the ../tools/ directory
+   1  download the file "ascp2000.405" and "header.405"
+      from the JPL server into this directory.
+   2  Then convert the ASCII ephemeris file into a corresponding binary file with the 
+      program of David Hoffman:
+
+      % ../tools/convert header.405 ascp2000.405 ascp2000.bin
+
+   3  Finally rename the resulting binary ephemeris file:
+
+      % mv ascp2000.bin ../JPLephemDE405.bin
+
+The binary file "JPLephemDE405.bin" contains the Tchebychev coefficients for the time
+span 2000 to 2019 and is read by my version of "jplint.c" compiled into the program
+../../NAlm/NauticalAlmanac (look there to see how to build this program).
+
+-----------------------------------------------------------------------------------------
+

@@ -1,0 +1,21 @@
+#! /bin/csh
+
+awk -f tai-utc.awk tai-utc.dat >! deltaT.tmp
+echo "==" >> deltaT.tmp
+awk -f finals.awk finals.data >> deltaT.tmp
+
+awk ' BEGIN    { f=0; t=0; u=0;} \
+      $1=="==" { f=1; next} \
+      f==0  { t2u_d[t]=$1; t2u_s[t]=$2; t++;} \
+      f==1  { u2u_d[u]=$1; u2u_s[u]=$2; u++;} \
+      END   { n=0; while(((n+1)<t)&&(t2u_d[n+1]<2000.00)) n++; \
+                                                               \
+              for(m=0; m<u; m++) \
+              { d=u2u_d[m]; \
+                if((n<t-1) && (t2u_d[n+1]<=d)) n++; \
+                printf "                            { %7.2f,     %5.2f },\n",d,32.184+t2u_s[n]-u2u_s[m]; \
+              } \
+            }' deltaT.tmp
+
+rm deltaT.tmp
+
